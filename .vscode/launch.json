@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug MCP Server HTTP",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli.js",
+      "args": ["--port=8931"],
+      "env": {
+        "DEBUG": "pw:mcp:*"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
