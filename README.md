@@ -61,7 +61,7 @@ Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user),
 
 #### Click the button to install:
 
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](cursor://anysphere.cursor-deeplink/mcp/install?name=Playwright&config=eyJjb21tYW5kIjoibnB4IEBwbGF5d3JpZ2h0L21jcEBsYXRlc3QifQ%3D%3D)
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=playwright&config=eyJjb21tYW5kIjoibnB4IEBwbGF5d3JpZ2h0L21jcEBsYXRlc3QifQ%3D%3D)
 
 #### Or install manually:
 
@@ -541,6 +541,14 @@ http.createServer(async (req, res) => {
 
 <!-- NOTE: This has been generated via update-readme.js -->
 
+- **browser_recording_status**
+  - Title: Get video recording status
+  - Description: Check if video recording is currently enabled and get recording details. Use this to verify recording is active before performing actions, or to check output directory and settings.
+  - Parameters: None
+  - Read-only: **true**
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
 - **browser_resize**
   - Title: Resize browser window
   - Description: Resize the browser window
@@ -565,6 +573,25 @@ http.createServer(async (req, res) => {
 - **browser_snapshot**
   - Title: Page snapshot
   - Description: Capture accessibility snapshot of the current page, this is better than screenshot
+  - Parameters: None
+  - Read-only: **true**
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **browser_start_recording**
+  - Title: Start video recording
+  - Description: Start recording browser session video. This must be called BEFORE performing browser actions you want to record. New browser contexts will be created with video recording enabled. Videos are automatically saved when pages/contexts close.
+  - Parameters:
+    - `size` (object, optional): Video recording size
+    - `filename` (string, optional): Base filename for video files (default: session-{timestamp}.webm)
+    - `outputDir` (string, optional): Custom directory to save video files (default: auto-generated temp directory)
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **browser_stop_recording**
+  - Title: Stop video recording
+  - Description: Stop video recording and return the paths to recorded video files. This closes all active pages to ensure videos are properly saved. Call this when you want to finalize and access the recorded videos.
   - Parameters: None
   - Read-only: **true**
 

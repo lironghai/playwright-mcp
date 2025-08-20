@@ -1,0 +1,11 @@
+{
+  "browser": {
+    "launchOptions": {
+      "args": [
+        "--load-extension=D:\\tools\\apifox\\Apifox-browser-extension\\output\\Apifox-Agent-Chrome",
+        "--disable-extensions-except=D:\\tools\\apifox\\Apifox-browser-extension\\output\\Apifox-Agent-Chrome",
+        "--disable-web-security"
+      ]
+    }
+  }
+}

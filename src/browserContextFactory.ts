@@ -160,46 +160,163 @@ class PersistentContextFactory implements BrowserContextFactory {
   readonly description = 'Create a new persistent browser context';
 
   private _userDataDirs = new Set<string>();
+  private _browserInstance: playwright.BrowserContext | undefined;
+  private _userDataDir: string | undefined;
+  private _createContextPromise: Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> | undefined;
 
   constructor(config: FullConfig) {
     this.config = config;
   }
 
   async createContext(clientInfo: ClientInfo): Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> {
+    // 防止并发创建
+    if (this._createContextPromise) {
+      testDebug('reusing pending browser context creation (persistent)');
+      return this._createContextPromise;
+    }
+
+    // 如果已有浏览器实例且未关闭，直接返回
+    if (this._browserInstance && await this._isBrowserContextValid(this._browserInstance)) {
+      testDebug('reusing existing browser context (persistent)');
+      return {
+        browserContext: this._browserInstance,
+        close: () => this._softCloseBrowserContext()
+      };
+    }
+
+    // 创建新的浏览器实例
+    this._createContextPromise = this._doCreateContext(clientInfo);
+
+    try {
+      const result = await this._createContextPromise;
+      return result;
+    } finally {
+      this._createContextPromise = undefined;
+    }
+  }
+
+  private async _doCreateContext(clientInfo: ClientInfo): Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> {
     await injectCdpPort(this.config.browser);
-    testDebug('create browser context (persistent)');
+    testDebug('create new browser context (persistent)');
+
     const userDataDir = this.config.browser.userDataDir ?? await this._createUserDataDir(clientInfo.rootPath);
     const tracesDir = await startTraceServer(this.config, clientInfo.rootPath);
+    this._userDataDir = userDataDir;
 
     this._userDataDirs.add(userDataDir);
     testDebug('lock user data dir', userDataDir);
 
     const browserType = playwright[this.config.browser.browserName];
-    for (let i = 0; i < 5; i++) {
+
+    // 如果检测到目录已被占用，尝试等待和重试
+    for (let i = 0; i < 3; i++) {
       try {
-        const browserContext = await browserType.launchPersistentContext(userDataDir, {
+        this._browserInstance = await browserType.launchPersistentContext(userDataDir, {
           tracesDir,
           ...this.config.browser.launchOptions,
           ...this.config.browser.contextOptions,
           handleSIGINT: false,
           handleSIGTERM: false,
         });
-        const close = () => this._closeBrowserContext(browserContext, userDataDir);
-        return { browserContext, close };
+
+        // 设置关闭监听器
+        this._setupBrowserEventListeners(this._browserInstance);
+
+        const close = () => this._hardCloseBrowserContext();
+        return { browserContext: this._browserInstance, close };
+
       } catch (error: any) {
         if (error.message.includes('Executable doesn\'t exist'))
           throw new Error(`Browser specified in your config is not installed. Either install it (likely) or change the config.`);
+
         if (error.message.includes('ProcessSingleton') || error.message.includes('Invalid URL')) {
-          // User data directory is already in use, try again.
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          continue;
+          if (i < 2) {
+            testDebug(`Browser directory in use, attempt ${i + 1}/3, waiting...`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
+            continue;
+          } else {
+            throw new Error(`Browser is already running with the same profile. Please close the existing browser instance or wait for it to fully shut down.`);
+          }
         }
         throw error;
       }
     }
-    throw new Error(`Browser is already in use for ${userDataDir}, use --isolated to run multiple instances of the same browser`);
+
+    throw new Error(`Failed to create browser context after 3 attempts`);
   }
 
+  private async _isBrowserContextValid(browserContext: playwright.BrowserContext): Promise<boolean> {
+    try {
+      // 检查浏览器上下文是否仍然有效
+      if (browserContext.pages().length === 0) {
+        return true; // 空上下文是有效的
+      }
+
+      // 尝试获取第一个页面的标题来测试连接
+      const pages = browserContext.pages();
+      if (pages.length > 0) {
+        await Promise.race([
+          pages[0].title(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000))
+        ]);
+      }
+
+      return true;
+    } catch (error) {
+      testDebug('Browser context validation failed:', error);
+      return false;
+    }
+  }
+
+  private _setupBrowserEventListeners(browserContext: playwright.BrowserContext) {
+    // 监听浏览器关闭事件
+    browserContext.on('close', () => {
+      testDebug('browser context closed event fired');
+      this._browserInstance = undefined;
+      if (this._userDataDir) {
+        this._userDataDirs.delete(this._userDataDir);
+        this._userDataDir = undefined;
+      }
+    });
+
+    // 监听页面创建和关闭，用于调试
+    browserContext.on('page', (page) => {
+      testDebug('new page created in persistent context');
+      page.on('close', () => {
+        testDebug('page closed in persistent context');
+      });
+    });
+  }
+
+  private async _softCloseBrowserContext(): Promise<void> {
+    // 软关闭：不实际关闭浏览器，保持登录状态
+    testDebug('soft close browser context (persistent) - keeping browser alive');
+    // 不做任何操作，让浏览器继续运行
+  }
+
+  private async _hardCloseBrowserContext(): Promise<void> {
+    // 硬关闭：完全关闭浏览器
+    testDebug('hard close browser context (persistent)');
+
+    if (this._browserInstance && !this._browserInstance.pages().every(p => p.isClosed())) {
+      try {
+        await this._browserInstance.close();
+      } catch (error) {
+        testDebug('Error closing browser context:', error);
+      }
+    }
+
+    this._browserInstance = undefined;
+
+    if (this._userDataDir) {
+      this._userDataDirs.delete(this._userDataDir);
+      this._userDataDir = undefined;
+    }
+
+    testDebug('hard close browser context complete (persistent)');
+  }
+
+  // 保留旧方法以兼容
   private async _closeBrowserContext(browserContext: playwright.BrowserContext, userDataDir: string) {
     testDebug('close browser context (persistent)');
     testDebug('release user data dir', userDataDir);
@@ -216,6 +333,22 @@ class PersistentContextFactory implements BrowserContextFactory {
     const result = path.join(dir, `mcp-${browserToken}${rootPathToken}`);
     await fs.promises.mkdir(result, { recursive: true });
     return result;
+  }
+
+  // 公共方法：强制重置浏览器实例
+  async resetBrowserInstance(): Promise<void> {
+    testDebug('forcing browser instance reset');
+    await this._hardCloseBrowserContext();
+    this._createContextPromise = undefined;
+  }
+
+  // 公共方法：检查浏览器状态
+  getBrowserStatus(): { hasInstance: boolean, userDataDir?: string, isValid?: boolean } {
+    return {
+      hasInstance: !!this._browserInstance,
+      userDataDir: this._userDataDir,
+      isValid: this._browserInstance ? !this._browserInstance.pages().every(p => p.isClosed()) : undefined
+    };
   }
 }
 

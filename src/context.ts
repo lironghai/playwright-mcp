@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import fs from 'fs';
+import path from 'path';
 import debug from 'debug';
 import * as playwright from 'playwright';
 
@@ -48,6 +50,9 @@ export class Context {
   private _currentTab: Tab | undefined;
   private _clientInfo: ClientInfo;
 
+  private _videoRecordingConfig: { dir: string; size?: { width: number; height: number } } | undefined;
+  private _videoBaseFilename: string | undefined;
+  private _activePagesWithVideos: Set<playwright.Page> = new Set();
   private static _allContexts: Set<Context> = new Set();
   private _closeBrowserContextPromise: Promise<void> | undefined;
   private _isRunningTool: boolean = false;
@@ -123,6 +128,11 @@ export class Context {
     this._tabs.push(tab);
     if (!this._currentTab)
       this._currentTab = tab;
+
+    // Track pages with video recording
+    if (this._videoRecordingConfig && page.video())
+      this._activePagesWithVideos.add(page);
+
   }
 
   private _onPageClosed(tab: Tab) {
@@ -199,10 +209,16 @@ export class Context {
   }
 
   private async _setupBrowserContext(): Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> {
-    if (this._closeBrowserContextPromise)
-      throw new Error('Another browser context is being closed.');
-    // TODO: move to the browser context factory to make it based on isolation mode.
-    const result = await this._browserContextFactory.createContext(this._clientInfo, this._abortController.signal);
+    let result: { browserContext: playwright.BrowserContext, close: () => Promise<void> };
+
+    if (this._videoRecordingConfig) {
+      // Create a new browser context with video recording enabled
+      result = await this._createVideoEnabledContext();
+    } else {
+      // Use the standard browser context factory
+      result = await this._browserContextFactory.createContext(this._clientInfo!, this._abortController.signal);
+    }
+
     const { browserContext } = result;
     await this._setupRequestInterception(browserContext);
     if (this.sessionLog)
@@ -220,6 +236,122 @@ export class Context {
     }
     return result;
   }
+
+
+  private async _createVideoEnabledContext(): Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> {
+    // For video recording, we need to create an isolated context
+    const browserType = playwright[this.config.browser.browserName];
+
+    const browser = await browserType.launch({
+      ...this.config.browser.launchOptions,
+      handleSIGINT: false,
+      handleSIGTERM: false,
+    });
+
+    const contextOptions = {
+      ...this.config.browser.contextOptions,
+      recordVideo: this._videoRecordingConfig,
+    };
+
+    const browserContext = await browser.newContext(contextOptions);
+
+    return {
+      browserContext,
+      close: async () => {
+        await browserContext.close();
+        await browser.close();
+      }
+    };
+  }
+
+  setVideoRecording(config: { dir: string; size?: { width: number; height: number } }, baseFilename: string) {
+    this._videoRecordingConfig = config;
+    this._videoBaseFilename = baseFilename;
+
+    // Force recreation of browser context to include video recording
+    if (this._browserContextPromise) {
+      void this._closeBrowserContextImpl().then(() => {
+        // The next call to _ensureBrowserContext will create a new context with video recording
+      });
+    }
+  }
+
+  getVideoRecordingInfo() {
+    return {
+      enabled: !!this._videoRecordingConfig,
+      config: this._videoRecordingConfig,
+      baseFilename: this._videoBaseFilename,
+      activeRecordings: this._activePagesWithVideos.size,
+    };
+  }
+
+  async stopVideoRecording(): Promise<string[]> {
+    if (!this._videoRecordingConfig)
+      return [];
+
+    const renamedPaths: string[] = [];
+    const videoPromises: Promise<string>[] = [];
+
+    // Use Video.saveAs() to directly save with custom filename
+    let counter = 1;
+    for (const page of this._activePagesWithVideos) {
+      try {
+        if (!page.isClosed()) {
+          const video = page.video();
+          if (video) {
+            let finalPath: string;
+            
+            if (this._videoBaseFilename) {
+              // Generate custom filename with proper extension
+              const videoDir = this._videoRecordingConfig.dir;
+              const videoExt = '.webm'; // Playwright always generates .webm files
+              
+              const filename = this._activePagesWithVideos.size === 1
+                ? `${this._videoBaseFilename}${videoExt}`
+                : `${this._videoBaseFilename}-${counter}${videoExt}`;
+              
+              finalPath = path.join(videoDir, filename);
+              counter++;
+              
+              // Use saveAs() which waits for video completion automatically
+              videoPromises.push(
+                video.saveAs(finalPath).then(() => {
+                  testDebug(`Video saved as: ${finalPath}`);
+                  return finalPath;
+                })
+              );
+            } else {
+              // No custom filename, use default path
+              videoPromises.push(
+                video.path().then(originalPath => {
+                  testDebug(`Video saved at: ${originalPath}`);
+                  return originalPath;
+                })
+              );
+            }
+          }
+          await page.close();
+        }
+      } catch (error) {
+        testDebug('Error processing video recording:', error);
+      }
+    }
+
+    // Wait for all videos to be saved
+    try {
+      const savedPaths = await Promise.all(videoPromises);
+      renamedPaths.push(...savedPaths);
+    } catch (error) {
+      testDebug('Error saving videos:', error);
+    }
+
+    this._activePagesWithVideos.clear();
+    this._videoRecordingConfig = undefined;
+    this._videoBaseFilename = undefined;
+
+    return renamedPaths;
+  }
+
 }
 
 export class InputRecorder {
