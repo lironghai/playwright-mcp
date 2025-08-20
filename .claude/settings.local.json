@@ -9,8 +9,16 @@
       "Bash(node:*)",
       "Bash(npm run lint:*)",
       "Bash(npm install:*)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(npm pack)",
+      "Bash(hero-playwright-mcp:*)",
+      "Bash(npx hero-playwright-mcp:*)",
+      "Bash(npm bin:*)",
+      "Bash(npm config:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "D:\\project\\node\\playwright-mcp-hero\\test-install"
+    ]
   }
 }

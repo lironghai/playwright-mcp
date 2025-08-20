@@ -120,17 +120,20 @@ function startHttpTransport(httpServer: http.Server, serverBackendFactory: Serve
       await handleStreamable(serverBackendFactory, req, res, streamableSessions);
   });
   const url = httpAddressToString(httpServer.address());
+  // const message = [
+  //   `Listening on ${url}/mcp`,
+  //   'Put this in your client config:',
+  //   JSON.stringify({
+  //     'mcpServers': {
+  //       'playwright': {
+  //         'url': `${url}/mcp`
+  //       }
+  //     }
+  //   }, undefined, 2),
+  //   'For legacy SSE transport support, you can use the /sse endpoint instead.',
+  // ].join('\n');
   const message = [
-    `Listening on ${url}`,
-    'Put this in your client config:',
-    JSON.stringify({
-      'mcpServers': {
-        'playwright': {
-          'url': `${url}/mcp`
-        }
-      }
-    }, undefined, 2),
-    'For legacy SSE transport support, you can use the /sse endpoint instead.',
+    `Listening on ${url}/mcp`
   ].join('\n');
     // eslint-disable-next-line no-console
   console.error(message);

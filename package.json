@@ -1,5 +1,5 @@
 {
-  "name": "@playwright/mcp",
+  "name": "@hero/playwright-mcp",
   "version": "0.0.33",
   "description": "Playwright Tools for MCP",
   "type": "module",
@@ -22,7 +22,7 @@
     "update-readme": "node utils/update-readme.js",
     "watch": "tsc --watch",
     "test": "playwright test",
-    "test-local": "node .\\cli.js --config playwright-map-config.json  --port=8931",
+    "test-local": "node .\\cli.js --config playwright-map-config.json --port=8931",
     "test-http": "cross-env DEBUG=pw:mcp:* node cli.js --port=8931",
     "test-http-debug": "cross-env DEBUG=* node --inspect cli.js --port=8931",
     "test-http-win": "node cli.js --port=8931",
@@ -76,6 +76,6 @@
     "typescript": "^5.8.2"
   },
   "bin": {
-    "mcp-server-playwright": "cli.js"
+    "hero-playwright-mcp": "cli.js"
   }
 }
