@@ -147,10 +147,7 @@ export async function start(serverBackendFactory: ServerBackendFactory, options:
     url: `${url}/mcp`
   };
   const message = [
-    `Listening on ${url}`,
-    'Put this in your client config:',
-    JSON.stringify(mcpConfig, undefined, 2),
-    'For legacy SSE transport support, you can use the /sse endpoint instead.',
+    `Listening on ${url}`
   ].join('\n');
     // eslint-disable-next-line no-console
   console.error(message);
