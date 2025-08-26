@@ -179,7 +179,17 @@ export class Context {
 
   async dispose() {
     this._abortController.abort('MCP context disposed');
-    await this.closeBrowserContext();
+    
+    // 根据配置决定是否真正关闭浏览器
+    if (this.config.server.keepBrowserAlive) {
+      // 只重置状态，不关闭浏览器，让下次连接可以复用
+      this._runningToolName = undefined;
+      // 可选：清理敏感状态但保留浏览器实例
+    } else {
+      // 默认行为：完全关闭浏览器上下文
+      await this.closeBrowserContext();
+    }
+    
     Context._allContexts.delete(this);
   }
 

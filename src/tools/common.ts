@@ -29,7 +29,14 @@ const close = defineTool({
   },
 
   handle: async (context, params, response) => {
+    // 确保能关闭浏览器，即使在复用场景下
     await context.closeBrowserContext();
+
+    // 对于 PersistentContextFactory，额外确保浏览器被关闭
+    const factory = (context as any)._browserContextFactory;
+    if (factory && typeof factory.resetBrowserInstance === 'function')
+      await factory.resetBrowserInstance();
+
     response.setIncludeTabs();
     response.addCode(`await page.close()`);
   },

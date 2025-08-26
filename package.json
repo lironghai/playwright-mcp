@@ -23,7 +23,7 @@
     "update-readme": "node utils/update-readme.js",
     "watch": "tsc --watch",
     "test": "playwright test",
-    "test-local": "node .\\cli.js --config playwright-map-config.json --port=8931",
+    "test-local": "node .\\cli.js --config playwright-map-config.json --keep-browser-alive --port=8931",
     "test-http": "cross-env DEBUG=pw:mcp:* node cli.js --port=8931",
     "test-http-debug": "cross-env DEBUG=* node --inspect cli.js --port=8931",
     "test-http-win": "node cli.js --port=8931",

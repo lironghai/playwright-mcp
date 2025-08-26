@@ -38,6 +38,7 @@ export type CLIOptions = {
   ignoreHttpsErrors?: boolean;
   isolated?: boolean;
   imageResponses?: 'allow' | 'omit';
+  keepBrowserAlive?: boolean;
   sandbox?: boolean;
   outputDir?: string;
   port?: number;
@@ -182,6 +183,7 @@ export function configFromCLIOptions(cliOptions: CLIOptions): Config {
     server: {
       port: cliOptions.port,
       host: cliOptions.host,
+      keepBrowserAlive: cliOptions.keepBrowserAlive,
     },
     capabilities: cliOptions.caps as ToolCapability[],
     network: {

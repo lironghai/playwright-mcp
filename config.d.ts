@@ -75,6 +75,11 @@ export type Config = {
      * The host to bind the server to. Default is localhost. Use 0.0.0.0 to bind to all interfaces.
      */
     host?: string;
+
+    /**
+     * Keep browser alive when MCP client disconnects, allowing next client to reuse the browser instance.
+     */
+    keepBrowserAlive?: boolean;
   },
 
   /**

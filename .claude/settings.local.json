@@ -14,7 +14,8 @@
       "Bash(hero-playwright-mcp:*)",
       "Bash(npx hero-playwright-mcp:*)",
       "Bash(npm bin:*)",
-      "Bash(npm config:*)"
+      "Bash(npm config:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "additionalDirectories": [

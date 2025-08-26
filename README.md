@@ -207,6 +207,9 @@ Playwright MCP server supports following arguments. They can be provided in the 
                                it to disk.
   --image-responses <mode>     whether to send image responses to the client.
                                Can be "allow" or "omit", Defaults to "allow".
+  --keep-browser-alive         keep browser alive when MCP client disconnects,
+                               allowing next client to reuse the browser
+                               instance.
   --no-sandbox                 disable the sandbox for all process types that
                                are normally sandboxed.
   --output-dir <path>          path to the directory for output files.

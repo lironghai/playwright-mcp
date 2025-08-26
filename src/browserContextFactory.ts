@@ -180,7 +180,7 @@ class PersistentContextFactory implements BrowserContextFactory {
       testDebug('reusing existing browser context (persistent)');
       return {
         browserContext: this._browserInstance,
-        close: () => this._softCloseBrowserContext()
+        close: () => this._hardCloseBrowserContext()
       };
     }
 

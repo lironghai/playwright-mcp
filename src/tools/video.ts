@@ -17,7 +17,7 @@ import path from 'path';
 import os from 'os';
 import { z } from 'zod';
 import { defineTool } from './tool.js';
-import { sanitizeForFilePath } from '../utils.js';
+import { sanitizeForFilePath } from '../utils/fileUtils.js';
 
 const startRecording = defineTool({
   capability: 'core',
