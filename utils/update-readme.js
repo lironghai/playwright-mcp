@@ -30,6 +30,9 @@ const capabilities = {
   'core-install': 'Browser installation',
   'vision': 'Coordinate-based (opt-in via --caps=vision)',
   'pdf': 'PDF generation (opt-in via --caps=pdf)',
+  'api_request': 'API request tools (opt-in via --caps=api_request)',
+  'api_session_status': 'API session status (opt-in via --caps=api_session_status)',
+  'api_session_report': 'API session reporting (opt-in via --caps=api_session_report)',
 };
 
 const toolsByCapability = Object.fromEntries(Object.entries(capabilities).map(([capability, title]) => [title, allTools.filter(tool => tool.capability === capability).sort((a, b) => a.schema.name.localeCompare(b.schema.name))]));

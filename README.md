@@ -714,5 +714,53 @@ http.createServer(async (req, res) => {
 
 </details>
 
+<details>
+<summary><b>API request tools (opt-in via --caps=api_request)</b></summary>
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **api_request**
+  - Title: API Request
+  - Description: Perform an HTTP API request and validate the response.
+  - Parameters:
+    - `sessionId` (string, optional): undefined
+    - `method` (string, optional): undefined
+    - `url` (string, optional): undefined
+    - `headers` (object, optional): undefined
+    - `data` (optional): undefined
+    - `expect` (object, optional): undefined
+    - `chain` (array, optional): undefined
+  - Read-only: **true**
+
+</details>
+
+<details>
+<summary><b>API session status (opt-in via --caps=api_session_status)</b></summary>
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **api_session_status**
+  - Title: API Session Status
+  - Description: Query API test session status, logs, and results by sessionId.
+  - Parameters:
+    - `sessionId` (string): undefined
+  - Read-only: **true**
+
+</details>
+
+<details>
+<summary><b>API session reporting (opt-in via --caps=api_session_report)</b></summary>
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **api_session_report**
+  - Title: API Session HTML Report
+  - Description: Generate and retrieve an HTML report for an API test session by sessionId.
+  - Parameters:
+    - `sessionId` (string): undefined
+  - Read-only: **true**
+
+</details>
+
 
 <!--- End of tools generated section -->
