@@ -31,6 +31,9 @@ import tabs from './tools/tabs.js';
 import screenshot from './tools/screenshot.js';
 import wait from './tools/wait.js';
 import verify from './tools/verify.js';
+import apiRequest from './tools/apiRequest.js';
+import { apiSessionStatusTools } from './tools/apiSessionStatus.js';
+import { apiSessionReportTools } from './tools/apiSessionReport.js';
 
 import type { Tool } from './tools/tool.js';
 import type { FullConfig } from './config.js';
@@ -53,6 +56,9 @@ export const allTools: Tool<any>[] = [
   ...tabs,
   ...wait,
   ...verify,
+  ...apiRequest,
+  ...apiSessionStatusTools,
+  ...apiSessionReportTools
 ];
 
 export function filteredTools(config: FullConfig) {
