@@ -1,6 +1,6 @@
 {
-  "name": "@playwright/mcp",
-  "version": "0.0.35",
+  "name": "@hero/playwright-mcp",
+  "version": "0.0.35.1",
   "description": "Playwright Tools for MCP",
   "type": "module",
   "repository": {
@@ -77,6 +77,6 @@
     "typescript": "^5.8.2"
   },
   "bin": {
-    "mcp-server-playwright": "cli.js"
+    "hero-playwright-mcp": "cli.js"
   }
 }

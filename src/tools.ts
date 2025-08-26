@@ -29,6 +29,7 @@ import pdf from './tools/pdf.js';
 import snapshot from './tools/snapshot.js';
 import tabs from './tools/tabs.js';
 import screenshot from './tools/screenshot.js';
+import video from './tools/video.js';
 import wait from './tools/wait.js';
 import verify from './tools/verify.js';
 import apiRequest from './tools/apiRequest.js';
@@ -54,6 +55,7 @@ export const allTools: Tool<any>[] = [
   ...screenshot,
   ...snapshot,
   ...tabs,
+  ...video,
   ...wait,
   ...verify,
   ...apiRequest,

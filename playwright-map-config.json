@@ -7,6 +7,5 @@
         "--disable-web-security"
       ]
     }
-//    "capabilities": ["core", "install", "pdf","vision"]
   }
 }

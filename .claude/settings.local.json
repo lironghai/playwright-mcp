@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm run lint)",
+      "Bash(node:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm install:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(npm pack)",
+      "Bash(hero-playwright-mcp:*)",
+      "Bash(npx hero-playwright-mcp:*)",
+      "Bash(npm bin:*)",
+      "Bash(npm config:*)"
+    ],
+    "deny": [],
+    "additionalDirectories": [
+      "D:\\project\\node\\playwright-mcp-hero\\test-install"
+    ]
+  }
+}

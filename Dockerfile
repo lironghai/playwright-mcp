@@ -30,6 +30,7 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked,id=npm-cache \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
   npm ci
 
+RUN npx playwright install
 # Copy the rest of the app
 COPY *.json *.js *.ts .
 COPY src src/
