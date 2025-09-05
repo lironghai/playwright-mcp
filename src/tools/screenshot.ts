@@ -28,6 +28,7 @@ const screenshotSchema = z.object({
   element: z.string().optional().describe('Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too.'),
   ref: z.string().optional().describe('Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too.'),
   fullPage: z.boolean().optional().describe('When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots.'),
+  requireImageData: z.boolean().optional().describe('When true, return the base64 data of the screenshot image file.'),
 }).refine(data => {
   return !!data.element === !!data.ref;
 }, {
@@ -78,7 +79,7 @@ const screenshot = defineTabTool({
 
     // https://github.com/microsoft/playwright-mcp/issues/817
     // Never return large images to LLM, saving them to the file system is enough.
-    if (!params.fullPage) {
+    if (params.requireImageData) {
       response.addImage({
         contentType: fileType === 'png' ? 'image/png' : 'image/jpeg',
         data: buffer
