@@ -32,6 +32,8 @@ const requests = defineTabTool({
 
   handle: async (tab, params, response) => {
     const requests = tab.requests();
+    const results = await Promise.all([...requests.entries()].map(async ([req, res]) => renderRequest(req, res)));
+    results.forEach(result => response.addResult(result));
     [...requests.entries()].forEach(([req, res]) => response.addResult(renderRequest(req, res)));
   },
 });
@@ -39,8 +41,13 @@ const requests = defineTabTool({
 function renderRequest(request: playwright.Request, response: playwright.Response | null) {
   const result: string[] = [];
   result.push(`[${request.method().toUpperCase()}] ${request.url()}`);
-  if (response)
+  if (response) {
     result.push(`=> [${response.status()}] ${response.statusText()}`);
+    const timing = request.timing();
+    const totalTime = timing.responseEnd;
+    result.push(`(Total: ${totalTime.toFixed(2)}ms)`);
+  }
+
   return result.join(' ');
 }
 
