@@ -1,5 +1,8 @@
 {
   "browser": {
+    "userDataDir": "D:\\project\\node\\playwright-mcp-hero\\playwright-mcp\\temp\\userDataDir",
+    "outputDir": "D:\\project\\node\\playwright-mcp-hero\\playwright-mcp\\outputDir",
+    "capabilities": ["tabs", "install","pdf","vision"],
     "launchOptions": {
       "args": [
         "--load-extension=D:\\tools\\apifox\\Apifox-browser-extension\\output\\Apifox-Agent-Chrome",

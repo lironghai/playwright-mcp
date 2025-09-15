@@ -26,15 +26,17 @@ const requests = defineTabTool({
     name: 'browser_network_requests',
     title: 'List network requests',
     description: 'Returns all network requests since loading the page',
-    inputSchema: z.object({}),
+    inputSchema: z.object({
+      filter: z.string().optional().describe('Comma-separated list of strings to filter requests by URL'),
+    }),
     type: 'readOnly',
   },
 
   handle: async (tab, params, response) => {
     const requests = tab.requests();
-    const results = await Promise.all([...requests.entries()].map(async ([req, res]) => renderRequest(req, res)));
-    results.forEach(result => response.addResult(result));
-    [...requests.entries()].forEach(([req, res]) => response.addResult(renderRequest(req, res)));
+    const filters = params.filter ? params.filter.split(',').map(f => f.trim()).filter(f => f) : [];
+
+    [...requests.entries()].filter(([req, res]) => !params.filter || filters.some(filter => req.url().includes(filter))).forEach(([req, res]) => response.addResult(renderRequest(req, res)));
   },
 });
 
@@ -45,7 +47,7 @@ function renderRequest(request: playwright.Request, response: playwright.Respons
     result.push(`=> [${response.status()}] ${response.statusText()}`);
     const timing = request.timing();
     const totalTime = timing.responseEnd;
-    result.push(`(Total: ${totalTime.toFixed(2)}ms)`);
+    result.push(`(StartTime: ${timing.startTime.toFixed(2)}ms ,Total: ${totalTime.toFixed(2)}ms)`);
   }
 
   return result.join(' ');
