@@ -140,8 +140,8 @@ function generateSummary(logs: any[]): any {
     validationsPassed,
     validationsFailed,
     validationRate: (validationsPassed + validationsFailed) > 0
-        ? Math.round((validationsPassed / (validationsPassed + validationsFailed)) * 100) / 100
-        : 0,
+      ? Math.round((validationsPassed / (validationsPassed + validationsFailed)) * 100) / 100
+      : 0,
     logEntries: logs.length,
     chainSteps: chainStepCount,
     singleRequests: singleRequestCount
@@ -267,8 +267,8 @@ function generateTimingData(logs: any[], session: any): any {
   const firstRequest = allRequests[0];
   const lastRequest = allRequests[allRequests.length - 1];
   const sessionDuration = lastRequest
-      ? (new Date(lastRequest.timestamp).getTime() - new Date(firstRequest.timestamp).getTime())
-      : 0;
+    ? (new Date(lastRequest.timestamp).getTime() - new Date(firstRequest.timestamp).getTime())
+    : 0;
 
   return {
     sessionDurationMs: sessionDuration,
@@ -832,10 +832,10 @@ function generateLogEntry(log: any, index: number): string {
                     <span>${escapeHtml(url)}</span>
                     ${statusCode > 0 ? `<span class="status-code ${statusClass}">${statusCode} ${statusText}</span>` : ''}
                     ${hasValidation
-      ? `<span class="validation-badge ${isValidationPassed ? 'passed' : 'failed'}">
+    ? `<span class="validation-badge ${isValidationPassed ? 'passed' : 'failed'}">
                             ${isValidationPassed ? '✓' : '✗'} Validation
                         </span>`
-      : ''}
+    : ''}
                 </div>
                 <div class="log-time">${log.formattedTime || ''}</div>
             </div>
@@ -884,8 +884,8 @@ function generateRequestResponseHtml(log: any): string {
                     ${log.response.body !== undefined ? `
                         <p><strong>Body:</strong></p>
                         <div class="code-block">${typeof log.response.body === 'string'
-      ? escapeHtml(log.response.body)
-      : escapeHtml(JSON.stringify(log.response.body, null, 2))}</div>
+    ? escapeHtml(log.response.body)
+    : escapeHtml(JSON.stringify(log.response.body, null, 2))}</div>
                     ` : ''}
                 ` : '<p>No response data available</p>'}
             </div>

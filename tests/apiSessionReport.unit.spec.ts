@@ -91,7 +91,7 @@ test.describe('API Session Report Tool Tests', () => {
     const reportsDir = path.resolve(process.cwd(), 'reports');
     const reportPath = path.join(reportsDir, `session-${sessionId}.html`);
     const htmlContent = await fs.readFile(reportPath, 'utf8');
-    
+
     expect(htmlContent).toContain(`API Test Session Report: ${sessionId}`);
     expect(htmlContent).toContain(`<b>Session ID:</b> ${sessionId}`);
     expect(htmlContent).toContain('<b>Status:</b> running');
@@ -111,7 +111,7 @@ test.describe('API Session Report Tool Tests', () => {
     // Test that the tool is properly registered
     const tools = await client.listTools();
     const reportTool = tools.tools.find(tool => tool.name === 'api_session_report');
-    
+
     expect(reportTool).toBeDefined();
     expect(reportTool?.name).toBe('api_session_report');
     expect(reportTool?.description).toContain('Generate and retrieve an HTML report');

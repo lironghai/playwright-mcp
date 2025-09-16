@@ -247,9 +247,9 @@ class PersistentContextFactory implements BrowserContextFactory {
   private async _isBrowserContextValid(browserContext: playwright.BrowserContext): Promise<boolean> {
     try {
       // 检查浏览器上下文是否仍然有效
-      if (browserContext.pages().length === 0) {
+      if (browserContext.pages().length === 0)
         return true; // 空上下文是有效的
-      }
+
 
       // 尝试获取第一个页面的标题来测试连接
       const pages = browserContext.pages();
@@ -279,7 +279,7 @@ class PersistentContextFactory implements BrowserContextFactory {
     });
 
     // 监听页面创建和关闭，用于调试
-    browserContext.on('page', (page) => {
+    browserContext.on('page', page => {
       testDebug('new page created in persistent context');
       page.on('close', () => {
         testDebug('page closed in persistent context');

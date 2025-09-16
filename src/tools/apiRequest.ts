@@ -144,13 +144,13 @@ const apiRequestTool = defineTool({
                 ([k, v]) => JSON.stringify(responseBody[k]) === JSON.stringify(v)
             );
             bodyValidation.reason = bodyValidation.matched
-                ? 'Partial/exact body match succeeded.'
-                : 'Partial/exact body match failed.';
+              ? 'Partial/exact body match succeeded.'
+              : 'Partial/exact body match failed.';
           } else if (typeof expect.body === 'string') {
             bodyValidation.matched = JSON.stringify(responseBody) === expect.body || responseBody === expect.body;
             bodyValidation.reason = bodyValidation.matched
-                ? 'Exact string match succeeded.'
-                : 'Exact string match failed.';
+              ? 'Exact string match succeeded.'
+              : 'Exact string match failed.';
           } else {
             bodyValidation.matched = false;
             bodyValidation.reason = 'Body type mismatch.';
@@ -261,13 +261,13 @@ const apiRequestTool = defineTool({
             ([k, v]) => JSON.stringify(responseBody[k]) === JSON.stringify(v)
         );
         bodyValidation.reason = bodyValidation.matched
-            ? 'Partial/exact body match succeeded.'
-            : 'Partial/exact body match failed.';
+          ? 'Partial/exact body match succeeded.'
+          : 'Partial/exact body match failed.';
       } else if (typeof expect.body === 'string') {
         bodyValidation.matched = JSON.stringify(responseBody) === expect.body || responseBody === expect.body;
         bodyValidation.reason = bodyValidation.matched
-            ? 'Exact string match succeeded.'
-            : 'Exact string match failed.';
+          ? 'Exact string match succeeded.'
+          : 'Exact string match failed.';
       } else {
         bodyValidation.matched = false;
         bodyValidation.reason = 'Body type mismatch.';
