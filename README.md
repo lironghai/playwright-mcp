@@ -546,7 +546,8 @@ http.createServer(async (req, res) => {
 - **browser_network_requests**
   - Title: List network requests
   - Description: Returns all network requests since loading the page
-  - Parameters: None
+  - Parameters:
+    - `filter` (string, optional): Comma-separated list of strings to filter requests by URL
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->

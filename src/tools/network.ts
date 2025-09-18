@@ -16,6 +16,7 @@
 
 import { z } from 'zod';
 import { defineTabTool } from './tool.js';
+import { logUnhandledError } from '../utils/log.js';
 
 import type * as playwright from 'playwright';
 
@@ -28,6 +29,7 @@ const requests = defineTabTool({
     description: 'Returns all network requests since loading the page',
     inputSchema: z.object({
       filter: z.string().optional().describe('Comma-separated list of strings to filter requests by URL'),
+      includeResponseBody: z.boolean().optional().default(false).describe('Whether to include response body in the result, defaults to false; Need to cooperate with the filter parameter, the number of requests cannot exceed 5'),
     }),
     type: 'readOnly',
   },
@@ -35,22 +37,69 @@ const requests = defineTabTool({
   handle: async (tab, params, response) => {
     const requests = tab.requests();
     const filters = params.filter ? params.filter.split(',').map(f => f.trim()).filter(f => f) : [];
-
-    [...requests.entries()].filter(([req, res]) => !params.filter || filters.some(filter => req.url().includes(filter))).forEach(([req, res]) => response.addResult(renderRequest(req, res)));
+    const filterRequest = [...requests.entries()].filter(([req, res]) => !params.filter || filters.some(filter => req.url().includes(filter)));
+    if (filterRequest) {
+      const isResponse = params.includeResponseBody && filterRequest.length <= 5;
+      const results = await Promise.all(
+          filterRequest.map(async ([req, res]) => await renderRequest(req, res, isResponse))
+      );
+      response.addResult(JSON.stringify(results, null, 2));
+    } else {
+      response.addResult(JSON.stringify([], null, 2));
+    }
   },
 });
 
-function renderRequest(request: playwright.Request, response: playwright.Response | null) {
+async function renderRequest(request: playwright.Request, response: playwright.Response | null, isResponse: boolean = false) {
   const result: string[] = [];
+  const resultObj: any = {};
+  resultObj.method = request.method().toUpperCase();
+  resultObj.url = request.url();
   result.push(`[${request.method().toUpperCase()}] ${request.url()}`);
+
+  const requestObj: any = {};
+  const responseObj: any = {};
+
+  resultObj.request = requestObj;
+  resultObj.response = responseObj;
+
+  requestObj.headers = request.headers();
   if (response) {
-    result.push(`=> [${response.status()}] ${response.statusText()}`);
+    responseObj.headers = response.headers();
+    const contentType = response.headers()['content-type'];
+    responseObj.contentType = contentType;
+    if (isResponse) {
+      try {
+        if (contentType && contentType.includes('application/json'))
+          responseObj.body = await response.json();
+        // result.push(`(\nresponse: ${response.json()})`);
+        else if (contentType && contentType.includes('text/html'))
+          responseObj.body = await response.text();
+        // result.push(`(\nresponse: ${response.text()})`);
+        // else
+          // responseObj.body = response.text();
+        // result.push(`(\nresponse: ${response.text()})`);
+
+        // result.push(` Content-Type: ${contentType} `);
+      } catch (error) {
+        // Handle the case where response body is not available
+        logUnhandledError(error);
+      }
+    }
+
+    resultObj.status = response.status();
+    // result.push(`=> [${response.status()}] ${response.statusText()}`);
+
     const timing = request.timing();
-    const totalTime = timing.responseEnd;
-    result.push(`(StartTime: ${timing.startTime.toFixed(2)}ms ,Total: ${totalTime.toFixed(2)}ms)`);
+    const startTime = timing.startTime.toFixed(2);
+    const totalTime = timing.responseEnd.toFixed(2);
+    resultObj.startTime = startTime;
+    resultObj.totalTime = totalTime;
+    // result.push(`(StartTime: ${startTime}ms ,Total: ${totalTime}ms)`);
   }
 
-  return result.join(' ');
+  // return result.join(' ');
+  return resultObj;
 }
 
 export default [
