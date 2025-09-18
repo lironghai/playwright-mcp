@@ -64,6 +64,7 @@ async function renderRequest(request: playwright.Request, response: playwright.R
   resultObj.response = responseObj;
 
   requestObj.headers = request.headers();
+  requestObj.body = request.postData();
   if (response) {
     responseObj.headers = response.headers();
     const contentType = response.headers()['content-type'];
