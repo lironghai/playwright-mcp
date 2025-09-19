@@ -29,7 +29,7 @@ const requests = defineTabTool({
     description: 'Returns all network requests since loading the page',
     inputSchema: z.object({
       filter: z.string().optional().describe('Comma-separated list of strings to filter requests by URL'),
-      includeResponseBody: z.boolean().optional().default(false).describe('Whether to include response body in the result, defaults to false; Need to cooperate with the filter parameter, the number of requests cannot exceed 5'),
+      includeInfo: z.boolean().optional().default(false).describe('Whether to include response body in the result, defaults to false; Need to cooperate with the filter parameter, the number of requests cannot exceed 5'),
     }),
     type: 'readOnly',
   },
@@ -39,9 +39,9 @@ const requests = defineTabTool({
     const filters = params.filter ? params.filter.split(',').map(f => f.trim()).filter(f => f) : [];
     const filterRequest = [...requests.entries()].filter(([req, res]) => !params.filter || filters.some(filter => req.url().includes(filter)));
     if (filterRequest) {
-      const isResponse = params.includeResponseBody && filterRequest.length <= 5;
+      const isInfo = params.includeInfo && filterRequest.length <= 5;
       const results = await Promise.all(
-          filterRequest.map(async ([req, res]) => await renderRequest(req, res, isResponse))
+          filterRequest.map(async ([req, res]) => await renderRequest(req, res, isInfo))
       );
       response.addResult(JSON.stringify(results, null, 2));
     } else {
@@ -50,7 +50,7 @@ const requests = defineTabTool({
   },
 });
 
-async function renderRequest(request: playwright.Request, response: playwright.Response | null, isResponse: boolean = false) {
+async function renderRequest(request: playwright.Request, response: playwright.Response | null, isInfo: boolean = false) {
   const result: string[] = [];
   const resultObj: any = {};
   resultObj.method = request.method().toUpperCase();
@@ -62,14 +62,37 @@ async function renderRequest(request: playwright.Request, response: playwright.R
 
   resultObj.request = requestObj;
   resultObj.response = responseObj;
+  // 获取请求大小信息，添加错误处理
+  let sizes;
+  try {
+    sizes = await request.sizes();
+  } catch (error) {
+    // 当无法获取大小信息时，设置默认值
+    sizes = {
+      requestBodySize: -1,
+      responseBodySize: -1
+    };
+    // @ts-ignore
+    logUnhandledError(new Error(`Unable to fetch sizes for request ${request.url()}: ${error.message}`));
+  }
 
-  requestObj.headers = request.headers();
-  requestObj.body = request.postData();
+
+  const requestContentType = request.headers()['content-type'];
+  requestObj.contentType = requestContentType;
+  requestObj.bodySize = sizes.requestBodySize;
+
+  if (isInfo) {
+    requestObj.headers = request.headers();
+    if (requestContentType && requestContentType.includes('application/json'))
+      requestObj.body = request.postDataJSON();
+  }
+
   if (response) {
-    responseObj.headers = response.headers();
     const contentType = response.headers()['content-type'];
     responseObj.contentType = contentType;
-    if (isResponse) {
+    responseObj.bodySize = sizes.responseBodySize && sizes.responseBodySize >= -1 ? sizes.responseBodySize : -1;
+    if (isInfo) {
+      responseObj.headers = response.headers();
       try {
         if (contentType && contentType.includes('application/json'))
           responseObj.body = await response.json();

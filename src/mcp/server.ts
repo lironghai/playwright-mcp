@@ -111,14 +111,30 @@ export function createServer(name: string, version: string, backend: ServerBacke
 }
 
 const startHeartbeat = (server: Server) => {
+  let consecutiveFailures = 0;
+  const maxConsecutiveFailures = 3;
+
   const beat = () => {
     Promise.race([
       server.ping(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('ping timeout')), 5000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('ping timeout')), 60000)),
     ]).then(() => {
-      setTimeout(beat, 3000);
-    }).catch(() => {
-      void server.close();
+      // 重置失败计数
+      consecutiveFailures = 0;
+      setTimeout(beat, 30000);
+    }).catch(error => {
+      // eslint-disable-next-line no-console
+      console.error(error);
+
+      consecutiveFailures++;
+      if (consecutiveFailures >= maxConsecutiveFailures) {
+        // eslint-disable-next-line no-console
+        console.error(`Ping failed ${maxConsecutiveFailures} consecutive times, closing connection`);
+        void server.close();
+      } else {
+        // 继续心跳检测
+        setTimeout(beat, 30000);
+      }
     });
   };
 
