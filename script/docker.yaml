@@ -1,0 +1,1 @@
+docker run -d -i --init --pull=always --entrypoint node --name playwright -p 8932:8932 mcr.microsoft.com/playwright/mcp cli.js --headless --browser chromium --no-sandbox --port 8932
